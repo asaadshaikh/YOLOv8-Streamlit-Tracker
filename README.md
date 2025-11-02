@@ -1,4 +1,4 @@
-YOLOv8 Object Detection & Tracking Engine with Streamlit
+VisionTrack AI
 
  <!-- Optional: Add this badge AFTER deploying -->
 
