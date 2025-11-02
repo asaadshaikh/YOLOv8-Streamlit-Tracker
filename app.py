@@ -233,7 +233,8 @@ def process_frame_with_tracking(frame, confidence, tracker):
     deepsort_detections = []
     for bbox_xyxy, conf, cls_id in formatted_detections:
         x1, y1, x2, y2 = bbox_xyxy
-        w, h = x2 - x1, y2 - yB
+        # *** THIS IS THE FIX ***
+        w, h = x2 - x1, y2 - y1 
         if w > 0 and h > 0:
             deepsort_detections.append(([int(x1), int(y1), int(w), int(h)], conf, cls_id))
     
@@ -438,21 +439,3 @@ with st.sidebar.container():
         "Built to showcase end-to-end engineering skills."
     )
     st.sidebar.link_button("View on GitHub", "https://github.com/asaadshaikh/YOLOv8-Streamlit-Tracker")
-### How to Deploy the New UI:
-
-You know the drill. This is the last push to make it look great.
-
-1.  **Save** the `app.py` file in VS Code.
-2.  Go to your **terminal**.
-3.  **Add** the change:
-    ```bash
-    git add app.py
-    ```
-4.  **Commit** the change (use a clear message):
-    ```bash
-    git commit -m "Feat: Complete UI overhaul with custom CSS"
-    ```
-5.  **Push** the change:
-    ```bash
-    git push origin main
-    
