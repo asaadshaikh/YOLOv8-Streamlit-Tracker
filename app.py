@@ -11,86 +11,165 @@ from deep_sort_realtime.deepsort_tracker import DeepSort
 
 # --- Page Config ---
 st.set_page_config(
-    page_title="YOLOv8 Real-Time Tracker",
-    page_icon="🤖",
+    page_title="VisionTrack AI | YOLOv8 & DeepSORT",
+    page_icon="✨",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# --- CUSTOM CSS ---
+# --- CUSTOM CSS (THE "MAGIC" TO MAKE IT LOOK GOOD) ---
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
 
+/* --- Global Styles --- */
 html, body, [class*="st-"] {
     font-family: 'Inter', sans-serif;
 }
 
-/* Main app container */
+/* --- Main App Background --- */
 .stApp {
-    /* Use a subtle gradient or image background */
-    background-color: #0e1117; /* Fallback */
-    background-image: linear-gradient(180deg, #0e1117 0%, #1a1a2e 100%);
+    background-image: url("https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&q=80&w=2070&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D");
+    background-size: cover;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
 }
 
-/* Sidebar styling */
+/* --- Glassmorphism Card Effect --- */
+.glass-card {
+    background-color: rgba(0, 0, 0, 0.4); /* Darker semi-transparent background */
+    backdrop-filter: blur(15px); /* Increased blur */
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1); /* Subtle white border */
+    padding: 20px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37); /* Deeper shadow */
+}
+
+/* --- Sidebar --- */
 [data-testid="stSidebar"] {
-    background-color: rgba(40, 43, 54, 0.4); /* Semi-transparent */
-    backdrop-filter: blur(10px);
-    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    background: none; /* Remove default sidebar background */
 }
-
-/* Sidebar header */
-[data-testid="stSidebar"] .st-emotion-cache-16txtl3 {
-    font-size: 24px;
-    font-weight: 700;
-    color: #FFFFFF;
-}
-
-/* Sidebar "About" box */
-[data-testid="stSidebar"] .stAlert {
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    background-color: rgba(255, 255, 255, 0.05);
-    border-radius: 10px;
-}
-
-/* Main content area */
-[data-testid="stAppViewContainer"] > .main > .block-container {
+[data-testid="stSidebar"] > div:first-child {
     padding-top: 2rem;
-    padding-left: 2rem;
-    padding-right: 2rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    /* Apply glass card effect to the sidebar inner container */
+    background-color: rgba(10, 10, 20, 0.6); /* Darker glass for sidebar */
+    backdrop-filter: blur(20px);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    margin: 1rem; /* Give sidebar 'floating' look */
 }
 
-/* Title */
+/* --- Main Content Area --- */
+[data-testid="stAppViewContainer"] > .main > .block-container {
+    padding-top: 3rem;
+    padding-left: 3rem;
+    padding-right: 3rem;
+    padding-bottom: 3rem;
+}
+
+/* --- Titles and Headers --- */
 h1 {
     color: #FFFFFF;
     font-weight: 700;
+    text-shadow: 2px 2px 8px rgba(0,0,0,0.5);
+}
+h2 {
+    color: #FFFFFF;
+    font-weight: 600;
+}
+h3 {
+    color: #E0E0E0;
+    font-weight: 600;
 }
 
-/* Sub-header text */
-.stApp > .main p {
-    font-size: 1.1rem;
-    color: #a0a0a0;
+/* --- General Text --- */
+p, .stMarkdown, [data-testid="stText"] {
+    color: #E0E0E0; /* Lighter grey for better readability */
+    font-size: 1.05rem;
 }
 
-/* Tabs */
+/* --- Tabs --- */
+[data-testid="stTabs"] {
+    /* Apply glass card effect to the whole tab container */
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(15px);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 10px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
 [data-testid="stTabs"] button {
     font-size: 1.1rem;
     font-weight: 600;
-    color: #a0a0a0;
-    border-radius: 8px 8px 0 0;
+    color: #A0A0A0; /* Dimmed color for inactive tabs */
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    transition: all 0.3s ease;
+}
+[data-testid="stTabs"] button:hover {
+    color: #FFFFFF;
+    background-color: rgba(255, 255, 255, 0.1);
 }
 [data-testid="stTabs"] button[aria-selected="true"] {
     color: #FFFFFF;
-    background-color: #1E1E2D;
-    border-bottom: 2px solid #00A3FF; /* Highlight color */
+    background-color: #00A3FF; /* Bright accent color */
+    border: none;
+    box-shadow: 0 0 15px 5px rgba(0, 163, 255, 0.3);
 }
 
-/* Expander (for detected objects) */
+/* --- Sidebar Controls --- */
+[data-testid="stSlider"] {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: rgba(0, 0, 0, 0.2);
+    padding: 15px;
+    border-radius: 10px;
+}
+[data-testid="stRadio"] {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: rgba(0, 0, 0, 0.2);
+    padding: 15px;
+    border-radius: 10px;
+}
+
+/* --- Buttons --- */
+.stButton button {
+    background: linear-gradient(45deg, #00A3FF, #007ACC);
+    color: #FFFFFF;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 163, 255, 0.3);
+}
+.stButton button:hover {
+    background: linear-gradient(45deg, #007ACC, #00A3FF);
+    box-shadow: 0 6px 20px rgba(0, 163, 255, 0.5);
+    transform: translateY(-2px);
+}
+.stButton button:focus {
+    box-shadow: 0 0 0 3px rgba(0, 163, 255, 0.5);
+}
+
+/* --- File Uploader --- */
+[data-testid="stFileUploader"] {
+    background-color: rgba(0, 0, 0, 0.2);
+    border: 2px dashed rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+}
+[data-testid="stFileUploader"] label {
+    color: #FFFFFF;
+    font-weight: 600;
+}
+
+/* --- Expander (Detected Objects) --- */
 [data-testid="stExpander"] {
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 10px;
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: rgba(0, 0, 0, 0.2);
 }
 [data-testid="stExpander"] summary {
     font-size: 1.1rem;
@@ -98,60 +177,36 @@ h1 {
     color: #FFFFFF;
 }
 
-/* Buttons */
-.stButton button {
-    background-color: #00A3FF;
-    color: #FFFFFF;
-    font-weight: 600;
-    border: none;
-    border-radius: 8px;
-    padding: 0.5rem 1rem;
-    transition: background-color 0.3s ease;
-}
-.stButton button:hover {
-    background-color: #007ACC;
-    color: #FFFFFF;
-}
-.stButton button:focus {
-    box-shadow: 0 0 0 2px rgba(0, 163, 255, 0.5);
-    background-color: #007ACC;
-}
-
-/* File uploader */
-[data-testid="stFileUploader"] {
-    background-color: rgba(255, 255, 255, 0.05);
-    border: 2px dashed rgba(255, 255, 255, 0.2);
-    border-radius: 10px;
-}
-[data-testid="stFileUploader"] label {
-    color: #FFFFFF;
-}
-
-/* Info/Warning boxes */
+/* --- Info/Warning Boxes --- */
 [data-testid="stAlert"] {
     border-radius: 10px;
     border: 1px solid rgba(255, 255, 255, 0.2);
-    background-color: rgba(255, 255, 255, 0.05);
-}
-[data-testid="stAlert"] .st-emotion-cache-l9i032 {
-    color: #FFFFFF; /* Text color in alert */
+    background-color: rgba(0, 0, 0, 0.2);
+    padding: 1rem;
 }
 
-/* Success box */
+/* --- Success Box --- */
 [data-testid="stAlert"][data-testid*="stSuccess"] {
     background-color: rgba(0, 255, 100, 0.1);
     border-color: rgba(0, 255, 100, 0.3);
 }
 
-/* Warning box */
+/* --- Warning Box --- */
 [data-testid="stAlert"][data-testid*="stWarning"] {
     background-color: rgba(255, 200, 0, 0.1);
     border-color: rgba(255, 200, 0, 0.3);
 }
 
+/* --- Video/Image Display --- */
+.stImage, .stVideo {
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
 </style>
 """, unsafe_allow_html=True)
-
 
 # --- Constants ---
 CONFIDENCE_THRESHOLD_DEFAULT = 0.3
@@ -169,15 +224,37 @@ def load_yolo_model(model_path):
         st.error(f"Error loading YOLO model '{model_path}': {e}")
         st.stop()
 
-model = load_yolo_model(MODEL_PATH)
-st.success(f"Model '{MODEL_PATH}' loaded successfully.", icon="✅")
-
-
 # --- Sidebar ---
-st.sidebar.header("⚙️ Settings")
-confidence_threshold = st.sidebar.slider(
-    "Confidence Threshold", 0.0, 1.0, CONFIDENCE_THRESHOLD_DEFAULT, 0.05
-)
+with st.sidebar:
+    st.header("⚙️ Settings")
+    
+    with st.container(border=True):
+        confidence_threshold = st.slider(
+            "Confidence Threshold", 0.0, 1.0, CONFIDENCE_THRESHOLD_DEFAULT, 0.05
+        )
+        
+    with st.container(border=True):
+        selected_mode_string = st.radio(
+            "WebRTC Mode", ("SENDRECV", "RECVONLY"), index=0, key="webrtc_mode_tracking"
+        )
+    
+    st.markdown("---")
+    st.subheader("Webcam Status")
+    status_placeholder = st.empty() # Placeholder for status
+    
+    st.markdown("---")
+    with st.container(border=True):
+        st.markdown("<h5>About this Project</h5>", unsafe_allow_html=True)
+        st.markdown(
+            "This app demonstrates a complete AI/ML pipeline:\n"
+            "1. **Detection:** YOLOv8\n"
+            "2. **Tracking:** DeepSORT\n"
+            "3. **Interface:** Streamlit\n\n"
+            "Built to showcase end-to-end engineering skills."
+        )
+        st.sidebar.link_button("View on GitHub", "https://github.com/asaadshaikh/YOLOv8-Streamlit-Tracker")
+
+model = load_yolo_model(MODEL_PATH)
 
 # --- Annotator Setup ---
 try:
@@ -185,7 +262,7 @@ try:
     box_annotator = sv.BoxAnnotator(color=colors, thickness=2)
     label_annotator = sv.LabelAnnotator(color=colors, text_color="white", text_scale=0.5, text_thickness=1)
 except AttributeError:
-    st.warning("`sv.ColorPalette.DEFAULT` or `sv.Color.white()` not found. Using basic string colors.")
+    # Fallback for different supervision versions
     try:
         box_annotator = sv.BoxAnnotator(color="white", thickness=2)
         label_annotator = sv.LabelAnnotator(color="white", text_color="red", text_scale=0.5, text_thickness=1)
@@ -233,8 +310,7 @@ def process_frame_with_tracking(frame, confidence, tracker):
     deepsort_detections = []
     for bbox_xyxy, conf, cls_id in formatted_detections:
         x1, y1, x2, y2 = bbox_xyxy
-        # *** THIS IS THE FIX ***
-        w, h = x2 - x1, y2 - y1 
+        w, h = x2 - x1, y2 - y1 # Corrected typo here (was yB)
         if w > 0 and h > 0:
             deepsort_detections.append(([int(x1), int(y1), int(w), int(h)], conf, cls_id))
     
@@ -275,7 +351,7 @@ def process_frame_with_tracking(frame, confidence, tracker):
     
     end_time = time.time()
     fps = 1 / (end_time - start_time) if (end_time - start_time) > 0 else 0
-    cv2.putText(annotated_frame, f"FPS: {fps:.2f}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
+    cv2.putText(annotated_frame, f"FPS: {fps:.2f}", (20, 45), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
     
     return annotated_frame
 
@@ -304,36 +380,40 @@ def create_webcam_transformer():
     return st.session_state.video_transformer_tracking
 
 # --- Main Page ---
-st.title("🤖 YOLOv8 Object Detection & Tracking Engine")
-st.write(
-    "This application uses the **YOLOv8** model for object detection and **DeepSORT** for real-time object tracking. "
-    "Upload your media or use the live webcam feed to see it in action!"
+st.title("✨ VisionTrack AI")
+st.markdown(
+    "Welcome to the Real-Time Object Detection & Tracking Engine. "
+    "Powered by **YOLOv8** and **DeepSORT**."
 )
+st.success(f"Model '{MODEL_PATH}' loaded. Confidence threshold: {confidence_threshold}", icon="✅")
 st.divider()
 
-tab1, tab2, tab3 = st.tabs(["🖼️ Image", "🎬 Video", "LIVE Webcam"])
+tab1, tab2, tab3 = st.tabs(["🖼️ Image Upload", "🎬 Video Upload", "📹 Live Webcam"])
 
 # --- Image Tab ---
 with tab1:
-    st.header("Upload an Image")
-    uploaded_image = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"], key="image_uploader")
-    col1, col2 = st.columns(2)
-
+    st.header("Detect Objects in an Image")
+    st.markdown("Upload an image, and the AI will detect and label objects.")
+    
+    uploaded_image = st.file_uploader("Upload Image", type=["jpg", "jpeg", "png"], key="image_uploader", label_visibility="collapsed")
+    
     if uploaded_image:
+        col1, col2 = st.columns(2)
         image = cv2.imdecode(np.frombuffer(uploaded_image.read(), np.uint8), cv2.IMREAD_COLOR)
+        
         if image is None:
             st.error("Could not decode image.")
         else:
             with col1:
-                st.image(image, caption="Uploaded Image", use_container_width=True, channels="BGR")
+                st.image(image, caption="Original Image", use_container_width=True, channels="BGR")
             
-            if st.button("Detect Objects", key="image_detect_button"):
-                with st.spinner("🕵️‍♂️ Detecting objects..."):
+            if st.button("🚀 Detect Objects", key="image_detect_button"):
+                with st.spinner("🕵️‍♂️ Analyzing image..."):
                     annotated_image, detections = process_image(image, confidence_threshold)
                 with col2:
                     st.image(annotated_image, caption="Detected Image", use_container_width=True, channels="BGR")
                 
-                with st.expander("🔍 See Detected Objects", expanded=True):
+                with st.expander("🔍 Detection Results", expanded=True):
                     if len(detections) > 0 and detections.class_id is not None:
                         detected_items = set()
                         for class_id, confidence in zip(detections.class_id, detections.confidence):
@@ -350,8 +430,10 @@ with tab1:
 
 # --- Video Tab ---
 with tab2:
-    st.header("Upload a Video")
-    uploaded_video = st.file_uploader("Choose a video...", type=["mp4", "avi", "mov", "mkv"], key="video_uploader")
+    st.header("Track Objects in a Video")
+    st.markdown("Upload a video, and the AI will detect and track objects frame by frame.")
+    
+    uploaded_video = st.file_uploader("Upload Video", type=["mp4", "avi", "mov", "mkv"], key="video_uploader", label_visibility="collapsed")
     
     if uploaded_video:
         video_path = None
@@ -364,9 +446,9 @@ with tab2:
             tfile.close()
 
             st.video(video_path)
-            video_output_placeholder = st.empty()
-
-            if st.button("Detect & Track Objects in Video", key="video_detect_button"):
+            
+            if st.button("🚀 Track Objects in Video", key="video_detect_button"):
+                video_output_placeholder = st.empty()
                 video_tracker = DeepSort(max_age=30, n_init=3, nms_max_overlap=1.0)
                 cap = None
                 try:
@@ -374,8 +456,8 @@ with tab2:
                     if not cap.isOpened():
                         st.error("Error: Could not open video file.")
                     else:
-                        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-                        progress_bar = st.progress(0, text="Processing video...") if total_frames > 0 else None
+                        total_frames = int(cap.get(cv.CAP_PROP_FRAME_COUNT))
+                        progress_bar = st.progress(0, text="Initializing...") if total_frames > 0 else None
                         
                         frame_counter = 0
                         while cap.isOpened():
@@ -388,7 +470,7 @@ with tab2:
                             
                             frame_counter += 1
                             if progress_bar is not None and total_frames > 0:
-                                progress_text = f"Processing video... Frame {frame_counter}/{total_frames}"
+                                progress_text = f"Processing frame {frame_counter} / {total_frames}"
                                 progress_bar.progress(frame_counter / total_frames, text=progress_text)
 
                         st.success("Video processing complete.")
@@ -403,10 +485,9 @@ with tab2:
 
 # --- Webcam Tab ---
 with tab3:
-    st.header("Live Webcam Feed with Tracking")
+    st.header("Live Webcam Tracking")
     st.info("Click 'Start' to begin. Note: Performance depends on your network connection.", icon="ℹ️")
 
-    selected_mode_string = st.sidebar.radio("WebRTC Mode", ("SENDRECV", "RECVONLY"), index=0, key="webrtc_mode_tracking")
     mode_enum = WebRtcMode.SENDRECV if selected_mode_string == "SENDRECV" else WebRtcMode.RECVONLY
 
     webrtc_ctx = webrtc_streamer(
@@ -418,24 +499,12 @@ with tab3:
         async_processing=True,
     )
     
-    st.sidebar.markdown("---")
-    st.sidebar.subheader("Webcam Status")
     if webrtc_ctx.state.playing:
-        st.sidebar.write("Status: **Running**")
+        status_placeholder.success("Webcam is **LIVE**", icon="🔴")
         if 'video_transformer_tracking' in st.session_state:
              st.sidebar.write(f"Confidence: **{st.session_state.video_transformer_tracking.confidence:.2f}**")
     else:
-        st.sidebar.write("Status: **Stopped**")
+        status_placeholder.info("Webcam is **STOPPED**", icon="⚫")
 
-# --- Sidebar About ---
-st.sidebar.markdown("---")
-with st.sidebar.container():
-    st.markdown("<h5>About this Project</h5>", unsafe_allow_html=True)
-    st.markdown(
-        "This app demonstrates a complete AI/ML pipeline:\n"
-        "1. **Detection:** YOLOv8\n"
-        "2. **Tracking:** DeepSORT\n"
-        "3. **Interface:** Streamlit\n\n"
-        "Built to showcase end-to-end engineering skills."
-    )
-    st.sidebar.link_button("View on GitHub", "https://github.com/asaadshaikh/YOLOv8-Streamlit-Tracker")
+    
+
