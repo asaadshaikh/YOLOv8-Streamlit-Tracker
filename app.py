@@ -438,7 +438,7 @@ with st.sidebar.container():
         "Built to showcase end-to-end engineering skills."
     )
     st.sidebar.link_button("View on GitHub", "https://github.com/asaadshaikh/YOLOv8-Streamlit-Tracker")
-```
+
 
 ### How to Deploy the New UI:
 
