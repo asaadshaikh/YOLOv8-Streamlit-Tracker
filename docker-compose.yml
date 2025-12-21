@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  visiontrack-api:
+    build: .
+    container_name: visiontrack-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./outputs:/app/outputs
+      - ./visiontrack.db:/app/visiontrack.db
+      - ./yolov8n.pt:/app/yolov8n.pt
+    environment:
+      - DATABASE_URL=sqlite:///./visiontrack.db
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - DEBUG=False
+      - LOG_LEVEL=INFO
+    command: uvicorn api.main:app --host 0.0.0.0 --port 8000
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  visiontrack-ui:
+    build: .
+    container_name: visiontrack-ui
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./outputs:/app/outputs
+      - ./visiontrack.db:/app/visiontrack.db
+      - ./yolov8n.pt:/app/yolov8n.pt
+    environment:
+      - DATABASE_URL=sqlite:///./visiontrack.db
+      - STREAMLIT_PORT=8501
+      - DEBUG=False
+      - LOG_LEVEL=INFO
+    command: streamlit run streamlit_app.py --server.port=8501 --server.address=0.0.0.0
+    restart: unless-stopped
+    depends_on:
+      - visiontrack-api
+

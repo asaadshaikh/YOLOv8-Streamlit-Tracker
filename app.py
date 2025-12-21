@@ -456,7 +456,7 @@ with tab2:
                     if not cap.isOpened():
                         st.error("Error: Could not open video file.")
                     else:
-                        total_frames = int(cap.get(cv.CAP_PROP_FRAME_COUNT))
+                        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
                         progress_bar = st.progress(0, text="Initializing...") if total_frames > 0 else None
                         
                         frame_counter = 0

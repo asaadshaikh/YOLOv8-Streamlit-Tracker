@@ -1,0 +1,140 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: visiontrack-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: visiontrack-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-visiontrack}
+      POSTGRES_USER: ${POSTGRES_USER:-visiontrack}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-visiontrack}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  celery-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+    container_name: visiontrack-celery
+    command: celery -A services.job_service worker --loglevel=info --concurrency=4
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-visiontrack}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-visiontrack}
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=${SECRET_KEY:-change-in-production}
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./uploads:/app/uploads
+      - ./outputs:/app/outputs
+      - ./yolov8n.pt:/app/yolov8n.pt
+    depends_on:
+      - redis
+      - postgres
+    restart: unless-stopped
+
+  celery-beat:
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+    container_name: visiontrack-celery-beat
+    command: celery -A services.job_service beat --loglevel=info
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-visiontrack}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-visiontrack}
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=${SECRET_KEY:-change-in-production}
+    depends_on:
+      - redis
+      - postgres
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+    container_name: visiontrack-api
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-visiontrack}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-visiontrack}
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=${SECRET_KEY:-change-in-production}
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - DEBUG=False
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./uploads:/app/uploads
+      - ./outputs:/app/outputs
+      - ./yolov8n.pt:/app/yolov8n.pt
+    command: uvicorn api.main:app --host 0.0.0.0 --port 8000 --workers 4
+    depends_on:
+      - redis
+      - postgres
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  ui:
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+    container_name: visiontrack-ui
+    ports:
+      - "8501:8501"
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-visiontrack}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-visiontrack}
+      - STREAMLIT_PORT=8501
+      - DEBUG=False
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./uploads:/app/uploads
+      - ./outputs:/app/outputs
+      - ./yolov8n.pt:/app/yolov8n.pt
+    command: streamlit run streamlit_app.py --server.port=8501 --server.address=0.0.0.0
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    container_name: visiontrack-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - api
+      - ui
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+  postgres_data:
+
